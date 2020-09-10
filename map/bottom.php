@@ -1,6 +1,5 @@
 <html>
 <head><title></title>
-<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.41&key=AIzaSyBRdARKMUmUkjP1FyVgetBPWaeYwF8KYkk"></script> 
 <script src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
 
@@ -11,52 +10,8 @@ var fB = window;
 
 
 function loadFrames(){
-
-		var divMap = fC.document.getElementById('gmap');
-		divMap.style.width  = fC.document.body.clientWidth + "px";
-		divMap.style.height = fC.document.body.clientHeight + "px";
-		// map
-		var gmap = new google.maps.Map(divMap,{
-			center: {
-				lat:  34.226781, 
-				lng: 131.589271,
-			},
-			zoom: 9,
-			gestureHandling: 'greedy'
-		});
- 
-        // ここでmap object生成
-		eval(fB.document.getElementById("map").value);
-		var min = map[0][5];  // マイナス対応のゲタ
-		map.forEach(function(row){
-				var marker = new google.maps.Marker({
-					position: {
-						lat: parseFloat(row[3]),
-						lng: parseFloat(row[2]),
-					},
-					icon: {
-						fillColor: 'red',
-						fillOpacity: 0.2,
-						path: google.maps.SymbolPath.CIRCLE,
-						scale: (row[5] - min)*5 + 5,
-						strokeColor: 'red',
-						strokeWeight: 1,
-					},
-					map: gmap,
-					title: row[1]
-				});
-				marker.addListener('click',function(){
-			      new google.maps.InfoWindow({
-					content:
-						'<p>ID: ' + row[1] + '</p>' +
-						'<p>NAME: ' + row[0] + '</p>' +
-						'<p>LAT: ' + row[3] + '</p>' +
-						'<p>LNG: ' + row[2] + '</p>' +
-						'<p>VALUE: ' + row[4] + '</p>'
-			      }).open(marker.getMap(), marker);
-
-			});
-		});
+		eval(document.getElementById('map').value);
+		top.frames['center'].loadMap(map);
 		
 		// ここでtable object生成
 		eval(fB.document.getElementById("table").value);
