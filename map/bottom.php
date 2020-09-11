@@ -91,6 +91,38 @@ function loadFrames(){
 		fL.document.body.onresize = drawChart;
 
 		tbl=$(fR.document.getElementsByTagName("table"));
+		function removeArrow(c){     // 下線付きのコントロールから△▽を除去する
+			return (hasUnderline(c))? c.html().replace(/[△▽]$/, ""): c.html();
+		}
+		function hasUnderline(c){        // 対象のコントロールに下線があるか判定
+			return (c.css("text-decoration") != null &&
+					c.css("text-decoration").indexOf("underline") >= 0);
+		}
+		tbl.find("th").off("click").on("click", function(evt){
+			var t = $(evt.target);         // 下線無しは昇順、△は降順、▽は元順
+			var key = t.html();
+			var dsc = (!hasUnderline(t))? false: (/△$/.test(t.html()))? true: null;
+			var kth = tbl.find("th:contains(" + (key||"") + ")").filter(
+				function(i, el){ return el.innerHTML == (key||"")});
+			var arw = (dsc === null)? "" : (dsc === true)?  "▽" : "△";
+			if(kth.length > 0){ kth.html(removeArrow(t) + arw)
+		.css("text-decoration", (dsc === null)? "none" : "underline");   }
+
+			var idx = (dsc === null)? 0 : t.index();
+			var elements = [].slice.call(tbl.find("tr").not(':first'));
+			elements.sort(function(a, b){
+				const x = $((dsc === true)? b : a).find("td")[idx].textContent;
+				const y = $((dsc === true)? a : b).find("td")[idx].textContent;
+				return ([x,y].map(p=>/^[0-9]+(\.[0-9]+)?$/.test(p)).reduce((q, r) => q && r))?
+					x - y : x.localeCompare(y);
+			});
+			for(var i = 0, len = elements.length; i < len; i++) {
+				var parent = elements[i].parentNode;
+				var detatchedItem = parent.removeChild(elements[i]);
+				parent.appendChild(detatchedItem);
+			}
+		});
+
 		tbl.find("tr").not(':first').off("click").on("click", function(evt){
 			var td = $(evt.target).parent().find("td");
 			var vl = td[0].innerHTML + "_" + td[2].innerHTML + "_" + td[3].innerHTML;
