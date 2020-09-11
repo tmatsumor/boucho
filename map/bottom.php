@@ -12,7 +12,35 @@ var fB = window;
 
 function loadFrames(){
 		eval(document.getElementById('map').value);
-		top.frames['center'].loadMap(map);
+		top.frames['center'].loadMap(map)
+		
+		function createSelect(nm, width, vl){
+			if (typeof(vl)==='undefined') vl = nm;
+			return $("<select>").html(nm.map((a, i) => {  return $("<option>").html(a).attr("value", vl[i])}))
+					.css({"margin-right": "5px", "width": width + "px"});
+		}
+		var col = createSelect(["ＣＤ", "村名", "収量", "単位","宰判"], 50, ["vil_cd", "vin_nm", "value", "tanni", "vil_cd"])
+				.off("change").on("change", ()=>{ 
+					[sai, con].forEach((el)=>{ el.css("display", "") });
+					((col.val() == "宰判")? con : sai).css("display", "none");
+				});
+		var con = createSelect(["完全一致", "部分一致", "以上", "以下", "範囲"], 80, ["eq","like","over","under","between"]);
+		var sai = createSelect(["大島","奥阿武","奥山代","前山代","上関","熊毛","都濃","三田尻","徳地","山口","小郡","舟木","吉田","美禰","先大津","前大津","当島"], 80, ["1,30","31,49","50,65","66,78","79,104","105,129","130,148","149,179","180,199","200,221","222,237","238,263","264,278","279,289","290,302","303,314","315,326"]).css("display", "none");
+		var btn = $("<input>").attr({"type": "button",
+				"value": (top.location.href.indexOf("&left=") > 0)? "解除" : "フィルタ"})
+				.off("click").on("click", evt =>{ 
+						var url = top.location.href.replace(/&left=.+$/,"")  + 
+							(($(evt.target).val() == "解除")? "" : (function(){
+									var isSai = (col.val() == "宰判");
+									var left = col.val();
+									var cond = (isSai)?  "between" : con.val();
+									var right = (isSai)? sai.val() : prompt("filter");
+									return "&" + [["left", left], ["cond", cond], ["right", right]]
+											.map(a=>{ return a.join("=") }).join("&");
+							}()));
+						top.location.href = url;
+					});
+		$("#divTable", fR.document).append([col, con, sai, btn]);
 		
 		// ここでtable object生成
 		eval(fB.document.getElementById("table").value);
@@ -26,9 +54,8 @@ function loadFrames(){
 			st += "</tr><tr>";
 		});
 		st = st.substr(0, st.length - 4) + "</table>";
-		fR.document.getElementById('divTable').innerHTML = st;
-		
-
+//		fR.document.getElementById('divTable').innerHTML = st;
+		$("#divTable", fR.document).append(st);
 
 		var hinName = decodeURIComponent(location.search.match(/nm=(.*?)(&|$)/)[1]);
 		var hinKana = decodeURIComponent(location.search.match(/kn=(.*?)(&|$)/)[1]);
