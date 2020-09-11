@@ -1,6 +1,7 @@
 <html>
 <head><title></title>
 <script src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script type="text/javascript">
 
 var fL = window.parent.frames['left'];
@@ -15,7 +16,7 @@ function loadFrames(){
 		
 		// ここでtable object生成
 		eval(fB.document.getElementById("table").value);
-		var st = "<table border=1 bordercolor='#d3d3d3' cellspacing=0 cellpadding=5 style='text-align:center;' width=100%>";
+		var st = "<table border=1 bordercolor='#d3d3d3' cellspacing=0 cellpadding=5 style='text-align:center;cursor:pointer;margin-top:5px' width=100%>";
 		st += "<tr bgcolor='#d3d3d3'><th>CD</th><th>村名</th><th>収量</th><th>単位</th></tr><tr>";
 		table.forEach(function(row){
 			st += "<td>" + row[1] + "</td>";
@@ -89,6 +90,13 @@ function loadFrames(){
 		google.charts.setOnLoadCallback(drawChart);
 		fL.document.body.onresize = drawChart;
 
+		tbl=$(fR.document.getElementsByTagName("table"));
+		tbl.find("tr").not(':first').off("click").on("click", function(evt){
+			var td = $(evt.target).parent().find("td");
+			var vl = td[0].innerHTML + "_" + td[2].innerHTML + "_" + td[3].innerHTML;
+			var m = $.grep(fC.marker, el => { return el.title == vl });
+			if(m.length > 0){ fC.google.maps.event.trigger(m[0], "click") }
+		});
 }
 
 function drawChart(){
@@ -141,20 +149,20 @@ $q1 .= " select avg(value) from sanbutsu where hin_al_cd in (";
 $q1 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd.")";
 $q1 .= " )) / (select std(value) from sanbutsu where hin_al_cd in ( ";
 $q1 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd.")";
-$q1 .= " ) as symbol ";
-$q1 .= " from (select * from sanbutsu where hin_al_cd in ( ";
-$q1 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd.")";
+$q1 .= " ) as symbol, tanni ";
+$q1 .= " from (select vil_cd, sum(value) as value, tanni from sanbutsu where hin_al_cd in ( ";
+$q1 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd.") group by vil_cd, tanni ";
 $q1 .= " ) a left outer join village b on a.vil_cd = b.vil_cd ";
 $q1 .= " order by value asc ";
-$a1 = array("vil_nm", "vil_cd", "pos_x", "pos_y", "value", "symbol");
+$a1 = array("vil_nm", "vil_cd", "pos_x", "pos_y", "value", "symbol", "tanni");
 echo sql2HiddenBox($q1, $a1, "map", $link);
 
 // ２つ目
 $q2  = " select vil_nm, a.vil_cd, value, tanni from (";
-$q2 .= " select * from sanbutsu where hin_al_cd in (";
-$q2 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd.")";
+$q2 .= " select vil_cd, sum(value) as value, tanni from sanbutsu where hin_al_cd in ( ";
+$q2 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd.") group by vil_cd, tanni ";
 $q2 .= " ) a left outer join village b on a.vil_cd = b.vil_cd";
-$q2 .= " order by a.vil_cd ";
+$q2 .= " order by a.vil_cd, value desc, tanni ";
 $a2 = array("vil_nm", "vil_cd", "value", "tanni");
 echo sql2HiddenBox($q2, $a2, "table", $link);
 
