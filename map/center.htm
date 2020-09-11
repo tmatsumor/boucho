@@ -11,6 +11,8 @@
   </style>
   <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.41&key=AIzaSyBRdARKMUmUkjP1FyVgetBPWaeYwF8KYkk"></script> 
   <script>
+  var balloon = null;
+  var marker = [];
   function loadMap(map){
       var divMap = document.getElementById('gmap');
       divMap.style.width  = document.body.clientWidth + "px";
@@ -27,7 +29,7 @@
 
 		var min = map[0][5];  // マイナス対応のゲタ
 		map.forEach(function(row){
-				var marker = new google.maps.Marker({
+				var m = new google.maps.Marker({
 					position: {
 						lat: parseFloat(row[3]),
 						lng: parseFloat(row[2]),
@@ -41,18 +43,22 @@
 						strokeWeight: 1,
 					},
 					map: gmap,
-					title: row[1]
+					title: row[1] + "_" + row[4] + "_" + row[6]
 				});
-				marker.addListener('click',function(){
-			      new google.maps.InfoWindow({
+				m.addListener('click',function(){
+          if(balloon != null){ balloon.close() }
+              balloon = new google.maps.InfoWindow({
 					content:
 						'<p>ID: ' + row[1] + '</p>' +
 						'<p>NAME: ' + row[0] + '</p>' +
 						'<p>LAT: ' + row[3] + '</p>' +
 						'<p>LNG: ' + row[2] + '</p>' +
-						'<p>VALUE: ' + row[4] + '</p>'
-			      }).open(marker.getMap(), marker);
+						'<p>VALUE: ' + row[4] + '</p>' +
+						'<p>UNIT: ' + row[6] + '</p>'
 			});
+            balloon.open(m.getMap(), m);
+			});
+        marker.push(m);
 		});
   }
  </script>

@@ -1,6 +1,7 @@
 <html>
 <head><title></title>
 <script src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script type="text/javascript">
 
 var fL = window.parent.frames['left'];
@@ -15,7 +16,7 @@ function loadFrames(){
 		
 		// ここでtable object生成
 		eval(fB.document.getElementById("table").value);
-		var st = "<table border=1 bordercolor='#d3d3d3' cellspacing=0 cellpadding=5 style='text-align:center;' width=100%>";
+		var st = "<table border=1 bordercolor='#d3d3d3' cellspacing=0 cellpadding=5 style='text-align:center;cursor:pointer;margin-top:5px' width=100%>";
 		st += "<tr bgcolor='#d3d3d3'><th>CD</th><th>村名</th><th>収量</th><th>単位</th></tr><tr>";
 		table.forEach(function(row){
 			st += "<td>" + row[1] + "</td>";
@@ -89,6 +90,13 @@ function loadFrames(){
 		google.charts.setOnLoadCallback(drawChart);
 		fL.document.body.onresize = drawChart;
 
+		tbl=$(fR.document.getElementsByTagName("table"));
+		tbl.find("tr").not(':first').off("click").on("click", function(evt){
+			var td = $(evt.target).parent().find("td");
+			var vl = td[0].innerHTML + "_" + td[2].innerHTML + "_" + td[3].innerHTML;
+			var m = $.grep(fC.marker, el => { return el.title == vl });
+			if(m.length > 0){ fC.google.maps.event.trigger(m[0], "click") }
+		});
 }
 
 function drawChart(){
