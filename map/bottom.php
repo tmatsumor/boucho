@@ -236,6 +236,18 @@ if(isset($_GET['cd'])&&isset($_GET['nm'])) {
 	exit();
 }
 
+$filter = NULL;
+$lef = $_GET['left'];
+$con = $_GET['cond'];
+$rit = $_GET['right'];
+if(isset($lef)&&isset($con)&&isset($rit)) {
+	$c = array_search($con, array('=' => 'eq', 'LIKE' => 'like', '>=' => 'over', '<=' => 'under', 'BETWEEN' => 'between'));
+	$r = ($c == '=')? '\''.$rit.'\'' : (($c == 'LIKE')? '\'%'.$rit.'%\'' : (($c == 'BETWEEN')? str_replace(',', ' AND ', $rit) : $rit));
+	$filter = ' and vil_cd in (select c.vil_cd from (select a.*, b.vil_nm from sanbutsu a ';
+	$filter .= ' left outer join village b on a.vil_cd = b.vil_cd) c where ';
+	$filter .= $lef.' '.$c.' '.$r.')';
+}
+
 // １つ目
 $q1  = " select vil_nm, a.vil_cd, pos_x, pos_y, value, ";
 $q1 .= " (value - (";
@@ -245,38 +257,43 @@ $q1 .= " )) / (select std(value) from sanbutsu where hin_al_cd in ( ";
 $q1 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd.")";
 $q1 .= " ) as symbol, tanni ";
 $q1 .= " from (select vil_cd, sum(value) as value, tanni from sanbutsu where hin_al_cd in ( ";
-$q1 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd.") group by vil_cd, tanni ";
+$q1 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd;
+$q1 .= ((is_null($filter))? "" : $filter).") group by vil_cd, tanni ";
 $q1 .= " ) a left outer join village b on a.vil_cd = b.vil_cd ";
 $q1 .= " order by value asc ";
 $a1 = array("vil_nm", "vil_cd", "pos_x", "pos_y", "value", "symbol", "tanni");
 echo sql2HiddenBox($q1, $a1, "map", $link);
+echo $filter;
 
 // ２つ目
 $q2  = " select vil_nm, a.vil_cd, value, tanni from (";
 $q2 .= " select vil_cd, sum(value) as value, tanni from sanbutsu where hin_al_cd in ( ";
-$q2 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd.") group by vil_cd, tanni ";
+$q2 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd;
+$q2 .= ((is_null($filter))? "" : $filter).") group by vil_cd, tanni ";
 $q2 .= " ) a left outer join village b on a.vil_cd = b.vil_cd";
 $q2 .= " order by a.vil_cd, value desc, tanni ";
 $a2 = array("vil_nm", "vil_cd", "value", "tanni");
 echo sql2HiddenBox($q2, $a2, "table", $link);
 
 // ３つ目
-$q3  = " select hin_al_nm, count from ( ";
+$q3  = " select hin_al_nm, count, b.hin_al_cd from ( ";
 $q3 .= " select hin_al_cd, count(*) as count from ( ";
 $q3 .= " select * from sanbutsu where hin_al_cd in ( ";
-$q3 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd.")";
+$q3 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd;
+$q3 .= " )".((is_null($filter) || $lef == "hin_al_cd")? "" : $filter);
 $q3 .= " ) a group by hin_al_cd ";
 $q3 .= " ) b left outer join hin_alias c ";
 $q3 .= " on b.hin_al_cd = c.hin_al_cd ";
 $q3 .= " order by count desc ";
-$a3 = array("hin_al_nm", "count");
+$a3 = array("hin_al_nm", "count", "hin_al_cd");
 echo sql2HiddenBox($q3, $a3, "kisaimei", $link);
 
 // ４つ目
 $q4  = " select count(*) as count, round(sum(value),1) as sum, ";
 $q4 .= " round(avg(value),1) as avg, round(std(value),1) as std, tanni ";
 $q4 .= " from ( select * from sanbutsu where hin_al_cd in (";
-$q4 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd.")";
+$q4 .= " select hin_al_cd from hin_alias where hin_cd = ".$hinCd;
+$q4 .= " )".((is_null($filter))? "" : $filter);
 $q4 .= " ) a group by tanni order by sum desc ";
 $a4 = array("count", "sum", "avg", "std", "tanni");
 echo sql2HiddenBox($q4, $a4, "summary", $link);
