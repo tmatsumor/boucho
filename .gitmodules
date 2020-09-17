@@ -1,0 +1,3 @@
+[submodule "kansuji"]
+	path = kansuji
+	url = https://github.com/ib97/kansuji.git
