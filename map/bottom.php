@@ -48,7 +48,7 @@ function loadFrames(){
 		st += "<tr bgcolor='#d3d3d3'><th>CD</th><th>村名</th><th>収量</th><th>単位</th></tr><tr>";
 		table.forEach(function(row){
 			st += "<td>" + row[1] + "</td>";
-			st += "<td>" + row[0].substr(0, row[0].length - 1) + "</td>";
+			st += "<td>" + row[0]/*.substr(0, row[0].length - 1)*/ + "</td>";
 			st += "<td>" + row[2] + "</td>";
 			st += "<td>" + row[3] + "</td>";
 			st += "</tr><tr>";
