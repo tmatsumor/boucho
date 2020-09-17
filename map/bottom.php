@@ -11,36 +11,72 @@ var fB = window;
 
 
 function loadFrames(){
+		eval(fB.document.getElementById("kisaimei").value);
+		const transpose = a => a[0].map((_, c) => a.map(r => r[c]));
+
 		eval(document.getElementById('map').value);
-		top.frames['center'].loadMap(map)
+		top.frames['center'].loadMap(map);
+		var nof = top.location.href.replace(/&left=.+$/,"");
 		
 		function createSelect(nm, width, vl){
 			if (typeof(vl)==='undefined') vl = nm;
 			return $("<select>").html(nm.map((a, i) => {  return $("<option>").html(a).attr("value", vl[i])}))
 					.css({"margin-right": "5px", "width": width + "px"});
 		}
-		var col = createSelect(["ＣＤ", "村名", "収量", "単位","宰判"], 50, ["vil_cd", "vin_nm", "value", "tanni", "vil_cd"])
+
+		function fromUrl(key){
+			return decodeURIComponent(
+				top.location.href.replace(new RegExp("^.+&"+key+"="), "").replace(/&.+$/, ""));
+		}
+		
+		var col = createSelect(["ＣＤ", "村名", "収量", "単位", "記載名", "宰判"], 70, ["vil_cd", "vil_nm", "value", "tanni", "hin_al_cd", "vil_cd"])
 				.off("change").on("change", ()=>{ 
-					[sai, con].forEach((el)=>{ el.css("display", "") });
-					((col.val() == "宰判")? con : sai).css("display", "none");
+					con.prop("selectedIndex", 0);
+					[sai, ksi, con].forEach((el)=>{ el.css("display", "none") });
+					const c = col.find("option:selected").html();
+					((c == "宰判")? sai : (c == "記載名")? ksi : con).css("display", "");
 				});
 		var con = createSelect(["完全一致", "部分一致", "以上", "以下", "範囲"], 80, ["eq","like","over","under","between"]);
 		var sai = createSelect(["大島","奥阿武","奥山代","前山代","上関","熊毛","都濃","三田尻","徳地","山口","小郡","舟木","吉田","美禰","先大津","前大津","当島"], 80, ["1,30","31,49","50,65","66,78","79,104","105,129","130,148","149,179","180,199","200,221","222,237","238,263","264,278","279,289","290,302","303,314","315,326"]).css("display", "none");
-		var btn = $("<input>").attr({"type": "button",
-				"value": (top.location.href.indexOf("&left=") > 0)? "解除" : "フィルタ"})
-				.off("click").on("click", evt =>{ 
-						var url = top.location.href.replace(/&left=.+$/,"")  + 
-							(($(evt.target).val() == "解除")? "" : (function(){
-									var isSai = (col.val() == "宰判");
-									var left = col.val();
-									var cond = (isSai)?  "between" : con.val();
-									var right = (isSai)? sai.val() : prompt("filter");
-									return "&" + [["left", left], ["cond", cond], ["right", right]]
-											.map(a=>{ return a.join("=") }).join("&");
-							}()));
-						top.location.href = url;
-					});
-		$("#divTable", fR.document).append([col, con, sai, btn]);
+		var ksi = createSelect(transpose(kisaimei)[0], 80, transpose(kisaimei)[2]).css("display", "none");
+		var btn = $("<input>").attr({"type": "button", "value":"フィルタ"}).off("click").on("click", evt =>{ 
+					var f = (function(){
+						var isSai = (col.find("option:selected").html() == "宰判");
+						var isKsi = (col.find("option:selected").html() == "記載名");
+						var prev = (top.location.href == nof)? "" : fromUrl("right");
+						var left = col.val();
+						var cond = (isSai)?  "between" : (isKsi)? "eq" : con.val();
+						var right = (isSai)? sai.val() : (isKsi)? ksi.val() : prompt("filter", prev);
+						return (right == null)? null : 
+							"&" + [["left", left], ["cond", cond], ["right", right], ["sai", isSai]]
+								.map(a=>{ return a.join("=") }).join("&");
+					}());
+					if(f == null){ return; }
+					top.location.href = nof + f;
+				});
+		
+		var rem = $("<input>").attr({"type": "button", "value": "解除"}).off("click").on("click", evt =>{
+			top.location.href = nof;
+		}).css("margin-left", "5px");
+		
+		$("#divTable", fR.document).append([col, con, sai, ksi, btn, rem]);
+		
+		if(top.location.href == nof){
+			rem.css("display", "none");
+		}
+		else{
+			var l = fromUrl("left");
+			if(fromUrl("sai") == "true"){
+				col.find("option:last").prop("selected", true);
+				sai.val(fromUrl("right"));
+			}
+			else{
+				col.val(l);
+			}
+			if(l == "hin_al_cd"){ ksi.val(fromUrl("right")); }
+			col.trigger("change");
+			con.val(fromUrl("cond"));
+		}
 		
 		// ここでtable object生成
 		eval(fB.document.getElementById("table").value);
@@ -64,9 +100,8 @@ function loadFrames(){
 		sk += "</ruby><br />";
 		
 		// ここでkisaimei object作成
-		eval(fB.document.getElementById("kisaimei").value);
 		sk += "<p style='line-height:140%'>";
-		kisaimei.forEach(function(row){
+		kisaimei.filter(el => ksi.css("display") == "none" || el[2] == ksi.val()).forEach(function(row){
 			sk += row[0] + "（" + row[1] + "） ";
 		});
 		sk += "</p></center>";
