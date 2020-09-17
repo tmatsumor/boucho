@@ -94,9 +94,9 @@ function loadFrames(){
 		$("#divTable", fR.document).append(st);
 
 		var hinName = decodeURIComponent(location.search.match(/nm=(.*?)(&|$)/)[1]);
-		var hinKana = decodeURIComponent(location.search.match(/kn=(.*?)(&|$)/)[1]);
+//		var hinKana = decodeURIComponent(location.search.match(/kn=(.*?)(&|$)/)[1]);
 		var sk = "<br /><center><ruby style='font-size:250%;padding:15px;'><rb>" + hinName + "</rb>";
-		sk += (hinName != hinKana)? "<rp>（</rp><rt>" + hinKana + "</rt><rp>）</rp>" : "";
+//		sk += (hinName != hinKana)? "<rp>（</rp><rt>" + hinKana + "</rt><rp>）</rp>" : "";
 		sk += "</ruby><br />";
 		
 		// ここでkisaimei object作成
