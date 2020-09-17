@@ -33,7 +33,7 @@ if ($result = mysqli_query($link, $q)) {
 	$s .= liFolder($fst["mon_nm"]);
 	$s .= liFolder($fst["kou_nm"]);
 	$s .= liFolder($fst["mok_nm"]);
-	$s .= liFile($fst["hin_cd"], $fst["hin_nm"]);
+	$s .= liMap($fst["hin_cd"], $fst["hin_nm"]);
 	$mon = $fst["mon_cd"];
 	$kou = $fst["kou_cd"];
 	$mok = $fst["mok_cd"];
@@ -51,7 +51,7 @@ while($row = mysqli_fetch_assoc($result)){
 	}else if($row["mok_cd"] != $mok){
 		$s .= "</ul></li></ul><ul>".$smk;
 	}
-	$s .= liFile($row["hin_cd"], $row["hin_nm"]);
+	$s .= liMap($row["hin_cd"], $row["hin_nm"]);
 	$mon = $row["mon_cd"];
 	$kou = $row["kou_cd"];
 	$mok = $row["mok_cd"];
@@ -63,12 +63,46 @@ function liFolder($txt)
     return "<li class='closed'><span class='folder'>".$txt."</span><ul>";
 }
 
-function liFile($cd, $nm)
+function liFile($nm, $url)
 {
-	return "<li class='closed'><a href='./map/index.php?cd=".$cd."&nm=".$nm."' target='_blank' style='cursor:pointer'>".$nm."</a></li>";
+	return "<li class='closed'><a href='".$url."' target='_blank' style='cursor:pointer'>".$nm."</a></li>";
 }
+
+function liMap($cd, $nm)
+{
+	return liFile($nm, "./map/index.php?cd=".$cd."&nm=".$nm);
+}
+
+function liPage($cd, $nm, $range)
+{
+	return liFile($nm, "./page.php?range=".$range."&vcd=".$cd);
+}
+
+$sai = array("大島"=>"1,30","奥阿武"=>"31,49","奥山代"=>"50,65","前山代"=>"66,78","上関"=>"79,104","熊毛"=>"105,129","都濃"=>"130,148","三田尻"=>"149,179","徳地"=>"180,199","山口"=>"200,221","小郡"=>"222,237","舟木"=>"238,263","吉田"=>"264,278","美禰"=>"279,289","先大津"=>"290,302","前大津"=>"303,314","当島"=>"315,326");
+$vil = array(array());
+
+if ($res2 = mysqli_query($link, " select vil_cd, vil_nm from village ")) {
+	$lim = array_values(array_map(function($x){ return preg_replace("/^.+,/", "", $x); }, $sai));
+	while($row = mysqli_fetch_assoc($res2)){
+		$idx = count($vil) - 1;
+		if($row["vil_cd"] >= $lim[$idx]){
+			$vil[] = array();
+		}
+		$vil[$idx][] = array($row["vil_cd"], $row["vil_nm"], array_values($sai)[$idx]);
+	}
+}
+
+$s .= liFolder("産物記載");
+foreach (array_keys($sai) as $k) {
+	$s .= liFolder($k);
+	foreach (array_shift($vil) as $v){ $s .= liPage($v[0], $v[1], $v[2]); }
+	$s .= "</ul></li>";
+}
+$s .= "</ul></li>";
+
 echo $s."</div></body></html>";
 mysqli_free_result($result);
+mysqli_free_result($res2);
 mysqli_close($link);
 
 ?> 
