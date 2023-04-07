@@ -9,7 +9,7 @@ $range = $_GET['range'];
 $vcd = $_GET['vcd'];
 
 if(isset($range)) {
-    $link = mysqli_connect('localhost','boucho','S9gxcNuK','boucho');
+    $link = mysqli_connect('localhost','boucho','password','boucho');
     if (mysqli_connect_errno()) {
         printf("Connect failed: %s\n", mysqli_connect_error());
         exit();
